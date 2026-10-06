@@ -1,82 +1,225 @@
-# My Claude Code workflow method
+# My Claude Code Workflow Method
 
-A documented way of working with Claude Code that I've arrived at over the past year of daily use. This is not a framework or a product. It's a personal method I'm writing down because a few people on LinkedIn asked me to, and because writing it down has made me better at using it.
+This is the way I have learned to work with Claude Code after using coding agents regularly on real projects.
+
+It is not a framework or a product. It is simply a working method I developed because I kept seeing the same problems when coding sessions became longer and more complicated.
+
+A few people on LinkedIn asked me how I work with Claude Code, so I decided to document it.
 
 ## Why this exists
 
-When I started using Claude Code, I noticed the same pattern most early users hit: impressive first 10 minutes, then degrading output as the session drifted. Vague prompts produced vague code. Long sessions lost context. "Fix this" became a loop.
+When I first started using Claude Code, I noticed that the beginning of a session could be very productive, but the results became less predictable as the work became larger.
 
-The method below is what fixed that for me. It comes directly from years of working in regulated manufacturing before I moved into software, where every step in a process has an explicit verification before the next step begins. Applied to AI-assisted coding, the same discipline turns out to work surprisingly well.
+Vague instructions produced vague results.
 
-I am not claiming this is the best method. It's the method that works for me.
+Long conversations created context drift.
+
+A simple request like "fix this" could turn into several rounds of changes without a clear definition of what finished actually meant.
+
+I started breaking work into smaller steps with a specific result that could be verified before moving forward.
+
+That worked much better for me.
+
+The method below developed gradually from using coding agents while building larger software projects.
+
+I am not claiming this is the best way to use Claude Code. It is simply the method that has worked well for me.
 
 ## The three patterns
 
-### 1. Numbered self-contained prompts
+### 1. Numbered self contained prompts
 
-Instead of conversational prompting, I write a numbered sequence of prompts up front. Each one is self-contained: it assumes no memory of what came before, includes all context it needs, and ends with an explicit verify step.
+For larger tasks, I prefer to break the work into a numbered sequence instead of having one long conversation.
 
-A typical sequence for a small feature looks like:
+Each step should contain enough context for Claude Code to understand the task and should end with something that can be verified.
 
-Read CLAUDE.md and the current state of src/intake/. Summarize what
-exists. Do not write any code yet. Verify: paste your summary.
-Add a new endpoint POST /intake/submit that accepts {name, email, level}.
-Validate with Pydantic. Return 201 with the created record.
-Verify: run curl against the endpoint with a sample payload and paste
-the response.
-Write a pytest test for the endpoint covering happy path, missing field,
-and invalid email. Verify: run pytest and paste the output.
+A simple example might look like this:
+
+```text
+1. Read CLAUDE.md and the current state of src/intake/.
+
+Summarize what currently exists.
+
+Do not change any code yet.
+
+Verify by returning a short summary of what you found.
 
 
-Three prompts. Each one standalone. Each one verifiable without me having to read the code myself.
+2. Add POST /intake/submit.
 
-### 2. Verify steps
+Accept name, email and level.
 
-The verify step at the end of each prompt is the single most important part of the method. Without it, Claude Code reports success based on what the code looks like. With it, success is conditional on an observable outcome: a passing test, a working curl, a correct file listing.
+Validate the input with Pydantic.
 
-Good verify steps are cheap to run and hard to fake:
+Return 201 when a record is created.
 
-- `run pytest -x and paste the output`
-- `curl the endpoint and paste the response`
-- `run git diff --stat and paste the output`
-- `list the files in X directory and confirm Y exists`
+Verify by calling the endpoint with a sample request and showing the response.
 
-Bad verify steps are things like "confirm the feature works" or "make sure it's correct." These get reported as successful even when they aren't.
 
-### 3. Coworker delegation
+3. Add tests for the endpoint.
 
-Once a feature is partly built and the verify steps are defined, I can hand off a review-and-fix cycle to Claude Code autonomously. The pattern:
-Here is the acceptance criteria for feature X:
-[bullet list, specific and verifiable]
-Read the current code, identify anything that doesn't meet the criteria,
-fix it, run the tests, and report back. If tests fail, keep iterating
-until they pass or until you've tried 3 times. Do not ask me clarifying
-questions during this pass.
+Test the normal case, a missing field and an invalid email.
 
-This is where the manufacturing mindset helps. "Coworker" is the right mental model: you're handing off a bounded task with clear acceptance criteria to someone who will execute it, not a conversation partner who needs to be steered at each step.
+Verify by running pytest and showing the result.
+```
+
+Each step has a purpose.
+
+Each step has an observable result.
+
+If something goes wrong, I know where it went wrong instead of trying to diagnose an entire session at once.
+
+### 2. Verification
+
+Verification is probably the most important part of the method.
+
+I do not want the coding agent to tell me that something looks correct.
+
+I want it to show me something that demonstrates the result.
+
+Examples include:
+
+```text
+Run pytest and show the result.
+
+Call the endpoint and show the response.
+
+Run git diff --stat and show what changed.
+
+List the files in the directory and confirm the expected file exists.
+
+Run the application and show whether it starts successfully.
+```
+
+A weak verification instruction would be:
+
+```text
+Make sure it works.
+```
+
+That does not define what success means.
+
+A better instruction defines something observable that both the agent and I can check.
+
+This has become especially important for me when working on larger projects where one incorrect assumption can affect several later steps.
+
+### 3. Bounded task delegation
+
+Once the goal and verification criteria are clear, I am comfortable giving a coding agent more room to work independently.
+
+For example:
+
+```text
+Here are the acceptance criteria for this feature:
+
+[clear and testable requirements]
+
+Read the current implementation.
+
+Identify anything that does not meet the requirements.
+
+Make the necessary changes.
+
+Run the relevant tests.
+
+If a test fails, investigate the failure and try again.
+
+Report what you changed and show the final test results.
+```
+
+The important part for me is that the task has boundaries.
+
+The agent knows what it is responsible for.
+
+The success criteria are already defined.
+
+There is still a point where I review the result before moving forward.
+
+I have found this much more reliable than giving an agent a broad instruction and hoping it makes the same assumptions I would.
 
 ## What this method is not
 
-- **It's not a replacement for thinking.** The method forces me to decide what "done" means before I start. That's the thinking. The AI does the typing.
-- **It's not fully autonomous.** I review every commit. The verify steps are how I review efficiently.
-- **It's not fast at first.** Writing numbered prompts takes longer than "just try stuff." It pays off on anything larger than a trivial change.
-- **It's not rigid.** I drop it entirely for exploration, spikes, and debugging. It's for *building*, not for *thinking out loud*.
+### It is not a replacement for thinking
 
-## Anti-patterns I had to unlearn
+I still have to decide what I want to build, what the requirements are and what finished should look like.
 
-- **Conversational drift.** "Now also add X. And Y. And actually let's refactor Z while we're here." Each one halves the clarity.
-- **Vague verify steps.** "Make sure it works" is not a verify step. "Run the tests and paste the output" is.
-- **Skipping the summary step.** Starting with "read the codebase and summarize" saves hours later. When Claude Code misunderstands the existing structure, everything downstream is contaminated.
-- **Accepting "I've implemented this" without proof.** The verify step is not optional. If it's not verifiable, it's not done.
+The coding agent can help with implementation, but it still needs a clear target.
 
-## Where I learned this
+### It is not fully autonomous
 
-From the factory floor, honestly. At Panasonic I was authorized to halt production when an anomaly was detected. You didn't "probably fix" a battery cell line. You verified, or you didn't proceed. That discipline transfers to AI-assisted coding more directly than I expected.
+I do not assume that something is correct simply because the agent says it is finished.
 
-## Feedback welcome
+I review important changes and use tests and other observable results to verify the work.
 
-I'm still refining this. If you've tried something similar and have a better way, open an issue. If you've tried this and it didn't work for you, I'd genuinely like to hear why.
+### It is not always the fastest approach
 
----
+For a very small change, I may simply make the change or give the agent one instruction.
 
-*Built by [Duan Erasmus](https://www.linkedin.com/in/duan-erasmus). Poland, remote.*
+The structured approach becomes more useful when a task has several steps or when mistakes early in the process could create problems later.
+
+### It is not how I use AI for everything
+
+Exploration and debugging are different.
+
+Sometimes I want to discuss a problem, investigate possibilities or let the agent explore.
+
+The structured method is mainly how I approach implementation work when I already have a reasonable idea of what needs to be built.
+
+## Things I had to stop doing
+
+### Letting the conversation drift
+
+Something like this can become a problem quickly:
+
+```text
+Now add this.
+
+Also change that.
+
+Actually refactor this too.
+
+And while you are there, fix this other thing.
+```
+
+Eventually the original task becomes unclear.
+
+I prefer to stop, redefine the task and start again with clear scope.
+
+### Using vague verification
+
+"Make sure it works" does not tell me much.
+
+A test result, API response or observable application behavior does.
+
+### Skipping the initial review
+
+On an existing project, I usually want the coding agent to inspect the relevant code before changing anything.
+
+If it misunderstands how the current system works, everything it builds afterward can be based on the wrong assumption.
+
+### Accepting completion without evidence
+
+When an agent says something is implemented, I still want to see the result.
+
+For me, completion and verification are two separate things.
+
+## Where this method came from
+
+This method developed gradually from working with coding agents on larger projects.
+
+As the projects became more complicated, I found that vague instructions became less useful and small misunderstandings became more expensive.
+
+Breaking work into clear steps, defining what success means and verifying the result before continuing made the process much more reliable.
+
+Over time that became the way I prefer to work with coding agents.
+
+I continue changing the method as the tools improve and as I learn what works better.
+
+## Feedback
+
+I am still refining this.
+
+If you use Claude Code or other coding agents differently and have found an approach that works well, I would be interested in hearing about it.
+
+If you try this method and find something that does not work, I would be interested in that too.
+
+Built by [Duan Erasmus](https://www.linkedin.com/in/duan-erasmus)
